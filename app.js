@@ -11,16 +11,16 @@ mongoose.Promise = require('bluebird');
 var passport = require('passport');
 var authenticate = require('./authenticate');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-
 //custom modules 
 const dishRouter = require('./routes/dishRouter');
 const promoRouter = require('./routes/promoRouter');
 const leaderRouter = require('./routes/leaderRouter');
+const index = require('./routes/index');
+const users = require('./routes/users');
+const config = require('./config');
 
 // Connection URL
-const url = 'mongodb://localhost:27017/conFusion';
+const url = config.mongoUrl;
 const connect = mongoose.connect(url, {
   // useMongoClient: true, // Not required in mongoose 5.x
   /* other options */
@@ -32,16 +32,7 @@ connect.then((db) => {
 
 
 var app = express();
-// app.use(cookieParser('12345-67890-09876-54321'));
-app.use(session({
-  name: 'session-id',
-  secret: '12345-67890-09876-54321',
-  saveUninitialized: false,
-  resave: false,
-  store: new FileStore()
-}));
 app.use(passport.initialize());
-app.use(passport.session());
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -56,29 +47,9 @@ app.set('view engine', 'jade');
 // routes
 app.use('/', index);
 app.use('/users', users);
-
-// for user authentication
-function auth (req, res, next) {
-  console.log(req.user);
-
-  if (!req.user) {
-    var err = new Error('You are not authenticated!');
-    res.setHeader('WWW-Authenticate', 'Basic');                          
-    err.status = 401;
-    next(err);
-  }
-  else {
-        next();
-  }
-}
-
-app.use(auth);
-
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
-
-
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
